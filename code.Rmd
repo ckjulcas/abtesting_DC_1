@@ -11,9 +11,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r, warning=FALSE, echo=FALSE, comment=FALSE, message=FALSE}
+library(tidyverse)
 library(dplyr)
 library(knitr)
 library(ggplot2)
+library(lubridate)
 ```
 
 
@@ -23,7 +25,10 @@ Los datos se consultan de la base de datos recolectados de las personas que dan 
 
 
 ```{r, echo=FALSE}
-df <- read.csv("https://assets.datacamp.com/production/repositories/2292/datasets/52b52cb1ca28ce10f9a09689325c4d94d889a6da/experiment_data.csv")
+
+#df <- read.csv("https://assets.datacamp.com/production/repositories/2292/datasets/52b52cb1ca28ce10f9a09689325c4d94d889a6da/experiment_data.csv")
+
+df <- read.csv(file="Data/ab_data.csv")
 
 kable(head(df), full_width = F)
 ```
@@ -32,17 +37,26 @@ kable(head(df), full_width = F)
 
 ## Exploring Data
 
-La tasa de adopción es `r round(mean(df$clicked_adopt_today),3)*100`%, la cual varía a lo largo del tiempo en el que se registraron los datos: `r df$visit_date[1]` y `r df$visit_date[nrow(df)]` 
+La tasa de adopción es `r round(mean(df$converted),3)*100`%, la cual varía a lo largo del tiempo en el que se registraron los datos: `r df$timestamp[1]` y `r df$timestamp[nrow(df)]` 
 
+
+
+```{r, echo=FALSE}
+df2 <-df %>%
+  group_by(hour=hour(timestamp)) %>%
+  summarize(conversion_rate=mean(converted))
+
+ggplot(df2, aes(x=hour, y=conversion_rate))+
+  geom_line()+
+  geom_point()+
+  scale_y_continuous(limits = c(0, 1))
+```
+
+
+## Power Analysis
 
 
 ```{r}
-df2 <- df %>%
-  group_by(month(visit_date)) %>%
-  summarise(conversion_rate=mean(clicked_adopt_today))
-gplot(df2, aes(x='month(visit_date', y=conversion))+
-  geom_line()+
-  geom_point()
-```
 
+```
 
