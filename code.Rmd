@@ -1,6 +1,7 @@
 ---
 title: "abTesting_DC"
 author: "Christian Julca"
+output_dir: docs
 output: html_document
 ---
 
