@@ -1,0 +1,47 @@
+---
+title: "abTesting_DC"
+author: "Christian Julca"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, warning=FALSE, echo=FALSE, comment=FALSE, message=FALSE}
+library(dplyr)
+library(knitr)
+library(ggplot2)
+```
+
+
+## Data
+
+Los datos se consultan de la base de datos recolectados de las personas que dan click en el botón de adoptar de [una página web](https://assets.datacamp.com/production/repositories/2292/datasets/52b52cb1ca28ce10f9a09689325c4d94d889a6da/experiment_data.csv) de adopción de mascotas
+
+
+```{r, echo=FALSE}
+df <- read.csv("https://assets.datacamp.com/production/repositories/2292/datasets/52b52cb1ca28ce10f9a09689325c4d94d889a6da/experiment_data.csv")
+
+kable(head(df), full_width = F)
+```
+
+
+
+## Exploring Data
+
+La tasa de adopción es `r round(mean(df$clicked_adopt_today),3)*100`%, la cual varía a lo largo del tiempo en el que se registraron los datos: `r df$visit_date[1]` y `r df$visit_date[nrow(df)]` 
+
+
+
+```{r}
+df2 <- df %>%
+  group_by(month(visit_date)) %>%
+  summarise(conversion_rate=mean(clicked_adopt_today))
+gplot(df2, aes(x='month(visit_date', y=conversion))+
+  geom_line()+
+  geom_point()
+```
+
+
