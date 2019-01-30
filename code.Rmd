@@ -16,6 +16,7 @@ library(dplyr)
 library(knitr)
 library(ggplot2)
 library(lubridate)
+library(scales) 
 ```
 
 
@@ -37,7 +38,7 @@ kable(head(df), full_width = F)
 
 ## Exploring Data
 
-La tasa de adopción es `r round(mean(df$converted),3)*100`%, la cual varía a lo largo del tiempo en el que se registraron los datos: `r df$timestamp[1]` y `r df$timestamp[nrow(df)]` 
+La tasa de conversion es `r round(mean(df$converted),3)*100`%, la cual varía a lo largo del tiempo en el que se registraron los datos: `r df$timestamp[1]` y `r df$timestamp[nrow(df)]` 
 
 
 
@@ -49,14 +50,60 @@ df2 <-df %>%
 ggplot(df2, aes(x=hour, y=conversion_rate))+
   geom_line()+
   geom_point()+
-  scale_y_continuous(limits = c(0, 1))
+  scale_y_continuous(limits = c(0, .15))
 ```
 
 
 ## Power Analysis
 
+El tamaño del experimento es la primera pregunta que debemos hacernos, un tamaño muy pequeño nos puede llevar a un bajo nivel de significancia sobre el efecto esperado. Por otro lado un tamaño muy alto puede elevar nuestros costos de evaluación del tratamiento.
+
+**Power Analysis**, te permite saber cual debería ser el tamaño de la muestra para el experimento. Solo necesita los siguientes insumos:
+
+* **Test Estadístico `SSizeLogisticBin`**: que se planea utilizar.
+* **Línea de base `p1`**: valor actual del indicador a evaluar.
+* **Valor esperado `p2`**: valor esperado del indicador a evaluar luego del tratamiento.
+* **Proporción de datos `B`** para el grupo tratado
+* **Alpha/límite de significancia `alpha`**
+* **power/1-$\beta$ `power`**: probabilidad de rechazar correctamente la hipótesis nula.
+
+Para aplicar **Power Analysis** en R utilizamos la librería `powerMediation`
 
 ```{r}
+library(powerMediation)
 
+total_sample_size <- SSizeLogisticBin(
+  p1=0.118,
+  p2=0.120,
+  B=0.5,
+  alpha=0.05,
+  power=0.8
+  )
+total_sample_size
+```
+
+En este caso, para obtener un efecto de `p2-p1` igual a 0.02 se necesitarìan `r comma(total_sample_size)` observaciones, de los cuales `r comma(round(total_sample_size/2))` corresponden al grupo tratamiento.
+
+## Analyzing Results
+
+
+
+```{r}
+df3 <-df %>%
+  group_by(group) %>%
+  summarize(conversion_rate=mean(converted), N=n())
+kable(df3)
+```
+
+
+```{r, echo=FALSE}
+df2 <-df %>%
+  group_by(hour=hour(timestamp), group) %>%
+  summarize(conversion_rate=mean(converted))
+
+ggplot(df2, aes(x=hour, y=conversion_rate, color=group))+
+  geom_line()+
+  geom_point()+
+  scale_y_continuous(limits = c(0, .15))
 ```
 
